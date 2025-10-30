@@ -27,7 +27,7 @@
         <VBox spacing="10" style="-fx-background-color: #1a1a1a; -fx-padding: 10;">
             <!-- Header -->
             <HBox alignment="CENTER">
-                <Label text="ROW | OCT | NOTE | INST | VOL | FX"
+                <Label text="ROW | NOTE | OCT | INST | VOL | FX"
                        style="-fx-text-fill: #ffaa00; -fx-font-family: monospace; -fx-font-weight: bold; -fx-font-size: 12;"/>
             </HBox>
 
