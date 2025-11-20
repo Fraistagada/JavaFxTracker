@@ -105,3 +105,15 @@
     -fx-border-color: #444444;
     -fx-border-width: 1;
 }
+
+/* Ligne en cours de lecture (barre verte) */
+.table-row-cell.playing {
+    -fx-background-color: #00aa00 !important;
+    -fx-text-fill: #000000 !important;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell.playing .table-cell {
+    -fx-text-fill: #000000 !important;
+    -fx-background-color: #00aa00;
+}
