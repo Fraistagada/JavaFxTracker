@@ -115,16 +115,35 @@ public class TrackerController {
     private void handlePlay() throws MidiUnavailableException {
         synth.open();
         new Thread(() -> {
-            for (PatternRow row : patternTable.getItems()) {
+            for (int i = 0; i < patternTable.getItems().size(); i++) {
+                PatternRow row = patternTable.getItems().get(i);
+                final int currentIndex = i;
+
                 String note = row.getNote();
                 String octave = row.getOctave();
                 String instrument = row.getInstrument();
 
+                // Jouer la note ET mettre à jour la barre en même temps
                 if (!note.equals("---")) {
                     playSample(note, octave, instrument);
                 }
+                // Mettre à jour visuellement la ligne en cours (en même temps que la note)
+                javafx.application.Platform.runLater(() -> {
+                    // Supprimer le style de toutes les lignes
+                    for (int j = 0; j < patternTable.getItems().size(); j++) {
+                        TableRow<PatternRow> tableRow = getTableRow(j);
+                        if (tableRow != null) {
+                            tableRow.getStyleClass().remove("playing");
+                        }
+                    }
 
-                // délai selon le BPM, indépendamment de la durée de la note
+                    // Ajouter le style à la ligne courante
+                    TableRow<PatternRow> currentRow = getTableRow(currentIndex);
+                    if (currentRow != null) {
+                        currentRow.getStyleClass().add("playing");
+                    }
+                });
+                // Délai selon le BPM
                 int delay = (int) ((60.0 / bpm) * 1000 / 4);
                 try {
                     Thread.sleep(delay);
@@ -132,8 +151,31 @@ public class TrackerController {
                     throw new RuntimeException(e);
                 }
             }
+            // Nettoyer le style à la fin
+            javafx.application.Platform.runLater(() -> {
+                for (int j = 0; j < patternTable.getItems().size(); j++) {
+                    TableRow<PatternRow> tableRow = getTableRow(j);
+                    if (tableRow != null) {
+                        tableRow.getStyleClass().remove("playing");
+                    }
+                }
+            });
             synth.close();
         }).start();
+    }
+
+    // Méthode utilitaire pour récupérer une TableRow
+    private TableRow<PatternRow> getTableRow(int index) {
+        for (javafx.scene.Node node : patternTable.lookupAll(".table-row-cell")) {
+            if (node instanceof TableRow) {
+                @SuppressWarnings("unchecked")
+                TableRow<PatternRow> row = (TableRow<PatternRow>) node;
+                if (row.getIndex() == index) {
+                    return row;
+                }
+            }
+        }
+        return null;
     }
 
     @FXML
