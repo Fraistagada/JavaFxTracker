@@ -58,6 +58,9 @@ public class TrackerController {
     private final Synthesizer synth = MidiSystem.getSynthesizer();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
+    private Thread playThread;
+    private volatile boolean isPlaying = false;
+
     public TrackerController() throws MidiUnavailableException {
     }
 
@@ -113,55 +116,40 @@ public class TrackerController {
 
     @FXML
     private void handlePlay() throws MidiUnavailableException {
+        if (isPlaying) return;
+
+        isPlaying = true;
         synth.open();
-        new Thread(() -> {
-            for (int i = 0; i < patternTable.getItems().size(); i++) {
-                PatternRow row = patternTable.getItems().get(i);
-                final int currentIndex = i;
 
-                String note = row.getNote();
-                String octave = row.getOctave();
-                String instrument = row.getInstrument();
+        playThread = new Thread(() -> {
+            try {
+                for (int i = 0; i < patternTable.getItems().size() && isPlaying; i++) {
 
-                // Jouer la note ET mettre à jour la barre en même temps
-                if (!note.equals("---")) {
-                    playSample(note, octave, instrument);
-                }
-                // Mettre à jour visuellement la ligne en cours (en même temps que la note)
-                javafx.application.Platform.runLater(() -> {
-                    // Supprimer le style de toutes les lignes
-                    for (int j = 0; j < patternTable.getItems().size(); j++) {
-                        TableRow<PatternRow> tableRow = getTableRow(j);
-                        if (tableRow != null) {
-                            tableRow.getStyleClass().remove("playing");
-                        }
+                    PatternRow row = patternTable.getItems().get(i);
+                    final int currentIndex = i;
+
+                    if (!row.getNote().equals("---")) {
+                        playSample(row.getNote(), row.getOctave(), row.getInstrument());
                     }
 
-                    // Ajouter le style à la ligne courante
-                    TableRow<PatternRow> currentRow = getTableRow(currentIndex);
-                    if (currentRow != null) {
-                        currentRow.getStyleClass().add("playing");
-                    }
-                });
-                // Délai selon le BPM
-                int delay = (int) ((60.0 / bpm) * 1000 / 4);
-                try {
+                    javafx.application.Platform.runLater(() -> {
+                        clearPlayingStyle();
+                        TableRow<PatternRow> currentRow = getTableRow(currentIndex);
+                        if (currentRow != null) currentRow.getStyleClass().add("playing");
+                    });
+
+                    int delay = (int) ((60.0 / bpm) * 1000 / 4);
+
                     Thread.sleep(delay);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
                 }
+            } catch (InterruptedException ignored) {
+                // Thread interrompu = arrêt de lecture
+            } finally {
+                endPlaybackCleanup();
             }
-            // Nettoyer le style à la fin
-            javafx.application.Platform.runLater(() -> {
-                for (int j = 0; j < patternTable.getItems().size(); j++) {
-                    TableRow<PatternRow> tableRow = getTableRow(j);
-                    if (tableRow != null) {
-                        tableRow.getStyleClass().remove("playing");
-                    }
-                }
-            });
-            synth.close();
-        }).start();
+        });
+
+        playThread.start();
     }
 
     // Méthode utilitaire pour récupérer une TableRow
@@ -181,8 +169,16 @@ public class TrackerController {
     @FXML
     private void handleStop() {
         System.out.println("STOP - Arrêt de la lecture");
-        stopPlayback();
+
+        isPlaying = false;
+
+        if (playThread != null && playThread.isAlive()) {
+            playThread.interrupt();
+        }
+
+        endPlaybackCleanup();
     }
+
 
     @FXML
     private void handlePause() {
@@ -222,13 +218,6 @@ public class TrackerController {
         return 12 * (octave + 1) + Constants.NOTES.get(note);
     }
 
-
-    private void stopPlayback() {
-        javafx.scene.media.MediaPlayer player = null;
-        if (player != null) {
-            player.stop();
-        }
-    }
 
     private void pausePlayback() {
         System.out.println("Lecture mise en pause (simulation)");
@@ -304,4 +293,25 @@ public class TrackerController {
             System.err.println("Erreur lors du chargement de la vue Piano");
         }
     }
+
+    private void endPlaybackCleanup() {
+        javafx.application.Platform.runLater(this::clearPlayingStyle);
+
+        if (synth.isOpen()) {
+            for (MidiChannel channel : synth.getChannels()) {
+                channel.allNotesOff();
+            }
+            synth.close();
+        }
+
+        isPlaying = false;
+    }
+
+    private void clearPlayingStyle() {
+        for (int j = 0; j < patternTable.getItems().size(); j++) {
+            TableRow<PatternRow> row = getTableRow(j);
+            if (row != null) row.getStyleClass().remove("playing");
+        }
+    }
+
 }
