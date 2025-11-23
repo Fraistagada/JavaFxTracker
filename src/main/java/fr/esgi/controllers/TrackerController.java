@@ -60,6 +60,8 @@ public class TrackerController {
 
     private Thread playThread;
     private volatile boolean isPlaying = false;
+    private volatile boolean isPaused = false;
+    private int currentRowIndex = 0;
 
     public TrackerController() throws MidiUnavailableException {
     }
@@ -116,17 +118,29 @@ public class TrackerController {
 
     @FXML
     private void handlePlay() throws MidiUnavailableException {
-        if (isPlaying) return;
+        if (isPlaying && !isPaused) {
+            return;
+        }
+
+        if (isPaused) {
+            isPaused = false;
+            return;
+        }
 
         isPlaying = true;
+        isPaused = false;
         synth.open();
 
         playThread = new Thread(() -> {
             try {
-                for (int i = 0; i < patternTable.getItems().size() && isPlaying; i++) {
+                for (int i = currentRowIndex; i < patternTable.getItems().size() && isPlaying; i++) {
 
+                    while (isPaused) {
+                        Thread.sleep(50);
+                    }
+
+                    currentRowIndex = i;
                     PatternRow row = patternTable.getItems().get(i);
-                    final int currentIndex = i;
 
                     if (!row.getNote().equals("---")) {
                         playSample(row.getNote(), row.getOctave(), row.getInstrument());
@@ -134,18 +148,21 @@ public class TrackerController {
 
                     javafx.application.Platform.runLater(() -> {
                         clearPlayingStyle();
-                        TableRow<PatternRow> currentRow = getTableRow(currentIndex);
+                        TableRow<PatternRow> currentRow = getTableRow(currentRowIndex);
                         if (currentRow != null) currentRow.getStyleClass().add("playing");
                     });
 
                     int delay = (int) ((60.0 / bpm) * 1000 / 4);
-
                     Thread.sleep(delay);
                 }
+
             } catch (InterruptedException ignored) {
                 // Thread interrompu = arrêt de lecture
             } finally {
-                endPlaybackCleanup();
+                if (!isPaused) {
+                    endPlaybackCleanup();
+                    currentRowIndex = 0;
+                }
             }
         });
 
@@ -171,6 +188,8 @@ public class TrackerController {
         System.out.println("STOP - Arrêt de la lecture");
 
         isPlaying = false;
+        isPaused = false;
+        currentRowIndex = 0;
 
         if (playThread != null && playThread.isAlive()) {
             playThread.interrupt();
@@ -183,7 +202,13 @@ public class TrackerController {
     @FXML
     private void handlePause() {
         System.out.println("PAUSE - Mise en pause");
-        pausePlayback();
+        isPaused = true;
+
+        if (synth.isOpen()) {
+            for (MidiChannel channel : synth.getChannels()) {
+                channel.allNotesOff();
+            }
+        }
     }
 
     @FXML
