@@ -85,7 +85,7 @@ public class TrackerController {
         // Ajouter quelques notes d'exemple
         patternTable.getItems().getFirst().setSound("C", "4");
         patternTable.getItems().getFirst().setInstrument("01");
-        patternTable.getItems().getFirst().setVolume("40");
+        patternTable.getItems().getFirst().setVolume("100");
 
         patternTable.getItems().get(4).setSound("E", "4");
         patternTable.getItems().get(4).setInstrument("01");
@@ -142,7 +142,7 @@ public class TrackerController {
                     PatternRow row = patternTable.getItems().get(i);
 
                     if (!row.getNote().equals("---")) {
-                        playSample(row.getNote(), row.getOctave(), row.getInstrument());
+                        playSample(row.getNote(), row.getOctave(), row.getInstrument(), Integer.parseInt(row.getVolume()));
                     }
 
                     javafx.application.Platform.runLater(() -> {
@@ -210,14 +210,14 @@ public class TrackerController {
         }
     }
 
-    private void playSample(String note, String octave, String instrument) {
-        // TODO : choisir l'instrument
+    private void playSample(String note, String octave, String instrument, int volume) {
         MidiChannel channel = synth.getChannels()[0];
         int noteMidi = noteToMidi(note, Integer.parseInt(octave));
 
         // TODO : Mettre la durée en paramètre
         int duration = 5000;
-        channel.noteOn(noteMidi, Constants.VELOCITY);
+        int vel = Math.max(0, Math.min(100, volume));
+        channel.noteOn(noteMidi, vel);
 
         // Planifier le noteOff sans bloquer le thread principal
         scheduler.schedule(() -> channel.noteOff(noteMidi), duration, TimeUnit.MILLISECONDS);

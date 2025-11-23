@@ -24,5 +24,4 @@ public class Constants {
             Map.entry("B", 11)
     );
 
-    public static final int VELOCITY = 100;
 }
