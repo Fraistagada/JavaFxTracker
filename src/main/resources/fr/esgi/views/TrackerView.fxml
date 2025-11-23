@@ -55,7 +55,11 @@
                     style="-fx-background-color: #aa0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
             <Button fx:id="pauseBtn" text="❚❚ PAUSE" onAction="#handlePause"
                     style="-fx-background-color: #aa8800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
-            <Button fx:id="recordBtn" text="● REC" onAction="#handleRecord"
+            <Button fx:id="saveBtn" text="⭳ Enregistrer" onAction="#handleSave"
+                    style="-fx-background-color: #0019aa; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+            <Button fx:id="loadBtn" text="⭱ Charger" onAction="#handleLoad"
+                    style="-fx-background-color: #00aaa2; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+            <Button fx:id="downloadMidi" text="🎘 .midi" onAction="#downloadMidi"
                     style="-fx-background-color: #666666; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
             <Separator orientation="VERTICAL"/>
             <Label fx:id="tempoLabel" text="Tempo: 125" style="-fx-text-fill: white; -fx-font-family: monospace;"/>

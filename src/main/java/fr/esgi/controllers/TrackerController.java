@@ -10,14 +10,13 @@ import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import javax.sound.midi.MidiChannel;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Synthesizer;
+import javax.sound.midi.*;
 import java.io.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static fr.esgi.utils.FxUtils.showError;
 
 public class TrackerController {
 
@@ -52,11 +51,16 @@ public class TrackerController {
     @FXML
     private Button pauseBtn;
     @FXML
-    private Button recordBtn;
+    private Button downloadMidi;
 
     private int bpm = Constants.DEFAULT_BPM;
     private final Synthesizer synth = MidiSystem.getSynthesizer();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+    private Thread playThread;
+    private volatile boolean isPlaying = false;
+    private volatile boolean isPaused = false;
+    private int currentRowIndex = 0;
 
     public TrackerController() throws MidiUnavailableException {
     }
@@ -81,7 +85,7 @@ public class TrackerController {
         // Ajouter quelques notes d'exemple
         patternTable.getItems().getFirst().setSound("C", "4");
         patternTable.getItems().getFirst().setInstrument("01");
-        patternTable.getItems().getFirst().setVolume("40");
+        patternTable.getItems().getFirst().setVolume("100");
 
         patternTable.getItems().get(4).setSound("E", "4");
         patternTable.getItems().get(4).setInstrument("01");
@@ -113,55 +117,55 @@ public class TrackerController {
 
     @FXML
     private void handlePlay() throws MidiUnavailableException {
+        if (isPlaying && !isPaused) {
+            return;
+        }
+
+        if (isPaused) {
+            isPaused = false;
+            return;
+        }
+
+        isPlaying = true;
+        isPaused = false;
         synth.open();
-        new Thread(() -> {
-            for (int i = 0; i < patternTable.getItems().size(); i++) {
-                PatternRow row = patternTable.getItems().get(i);
-                final int currentIndex = i;
 
-                String note = row.getNote();
-                String octave = row.getOctave();
-                String instrument = row.getInstrument();
+        playThread = new Thread(() -> {
+            try {
+                for (int i = currentRowIndex; i < patternTable.getItems().size() && isPlaying; i++) {
 
-                // Jouer la note ET mettre à jour la barre en même temps
-                if (!note.equals("---")) {
-                    playSample(note, octave, instrument);
-                }
-                // Mettre à jour visuellement la ligne en cours (en même temps que la note)
-                javafx.application.Platform.runLater(() -> {
-                    // Supprimer le style de toutes les lignes
-                    for (int j = 0; j < patternTable.getItems().size(); j++) {
-                        TableRow<PatternRow> tableRow = getTableRow(j);
-                        if (tableRow != null) {
-                            tableRow.getStyleClass().remove("playing");
-                        }
+                    while (isPaused) {
+                        Thread.sleep(50);
                     }
 
-                    // Ajouter le style à la ligne courante
-                    TableRow<PatternRow> currentRow = getTableRow(currentIndex);
-                    if (currentRow != null) {
-                        currentRow.getStyleClass().add("playing");
+                    currentRowIndex = i;
+                    PatternRow row = patternTable.getItems().get(i);
+
+                    if (!row.getNote().equals("---")) {
+                        playSample(row.getNote(), row.getOctave(), row.getInstrument(), Integer.parseInt(row.getVolume()));
                     }
-                });
-                // Délai selon le BPM
-                int delay = (int) ((60.0 / bpm) * 1000 / 4);
-                try {
+
+                    javafx.application.Platform.runLater(() -> {
+                        clearPlayingStyle();
+                        TableRow<PatternRow> currentRow = getTableRow(currentRowIndex);
+                        if (currentRow != null) currentRow.getStyleClass().add("playing");
+                    });
+
+                    int delay = (int) ((60.0 / bpm) * 1000 / 4);
                     Thread.sleep(delay);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                }
+
+            } catch (InterruptedException ignored) {
+                // Thread interrompu = arrêt de lecture
+            } finally {
+                if (!isPaused) {
+                    endPlaybackCleanup();
+                    currentRowIndex = 0;
                 }
             }
-            // Nettoyer le style à la fin
-            javafx.application.Platform.runLater(() -> {
-                for (int j = 0; j < patternTable.getItems().size(); j++) {
-                    TableRow<PatternRow> tableRow = getTableRow(j);
-                    if (tableRow != null) {
-                        tableRow.getStyleClass().remove("playing");
-                    }
-                }
-            });
-            synth.close();
-        }).start();
+        });
+
+        playThread.start();
     }
 
     // Méthode utilitaire pour récupérer une TableRow
@@ -181,38 +185,39 @@ public class TrackerController {
     @FXML
     private void handleStop() {
         System.out.println("STOP - Arrêt de la lecture");
-        stopPlayback();
+
+        isPlaying = false;
+        isPaused = false;
+        currentRowIndex = 0;
+
+        if (playThread != null && playThread.isAlive()) {
+            playThread.interrupt();
+        }
+
+        endPlaybackCleanup();
     }
+
 
     @FXML
     private void handlePause() {
         System.out.println("PAUSE - Mise en pause");
-        pausePlayback();
-    }
+        isPaused = true;
 
-    @FXML
-    private void handleRecord() {
-        System.out.println("REC - Mode enregistrement activé");
-
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Enregistrer la piste");
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("Tracker File (*.trk)", "*.trk")
-        );
-        File file = fileChooser.showSaveDialog(patternTable.getScene().getWindow());
-        if (file != null) {
-            savePatternToFile(file);
+        if (synth.isOpen()) {
+            for (MidiChannel channel : synth.getChannels()) {
+                channel.allNotesOff();
+            }
         }
     }
 
-    private void playSample(String note, String octave, String instrument) {
-        // TODO : choisir l'instrument
+    private void playSample(String note, String octave, String instrument, int volume) {
         MidiChannel channel = synth.getChannels()[0];
         int noteMidi = noteToMidi(note, Integer.parseInt(octave));
 
         // TODO : Mettre la durée en paramètre
         int duration = 5000;
-        channel.noteOn(noteMidi, Constants.VELOCITY);
+        int vel = Math.max(0, Math.min(100, volume));
+        channel.noteOn(noteMidi, vel);
 
         // Planifier le noteOff sans bloquer le thread principal
         scheduler.schedule(() -> channel.noteOff(noteMidi), duration, TimeUnit.MILLISECONDS);
@@ -222,35 +227,6 @@ public class TrackerController {
         return 12 * (octave + 1) + Constants.NOTES.get(note);
     }
 
-
-    private void stopPlayback() {
-        javafx.scene.media.MediaPlayer player = null;
-        if (player != null) {
-            player.stop();
-        }
-    }
-
-    private void pausePlayback() {
-        System.out.println("Lecture mise en pause (simulation)");
-    }
-
-    private void savePatternToFile(File file) {
-        try (PrintWriter writer = new PrintWriter(file)) {
-            for (PatternRow row : patternTable.getItems()) {
-                writer.printf("%s;%s;%s;%s;%s;%s%n",
-                        row.getRow(),
-                        row.getNote(),
-                        row.getOctave(),
-                        row.getInstrument(),
-                        row.getVolume(),
-                        row.getEffect()
-                );
-            }
-            System.out.println("Piste enregistrée : " + file.getAbsolutePath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     @FXML
     private void handleOpenFile() {
@@ -279,7 +255,7 @@ public class TrackerController {
             }
             System.out.println("Piste chargée : " + file.getAbsolutePath());
         } catch (IOException e) {
-            e.printStackTrace();
+            showError("Erreur de chargement", "Impossible de charger la piste.");
         }
     }
 
@@ -295,13 +271,164 @@ public class TrackerController {
             Parent root = loader.load();
 
             Stage stage = (Stage) patternTable.getScene().getWindow();
-            Scene scene = new Scene(root, 800, 600);
+            Scene scene = new Scene(root, 1000, 600);
             scene.getStylesheets().add(getClass().getResource("/fr/esgi/styles/tracker-style.css").toExternalForm());
             stage.setScene(scene);
 
         } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Erreur lors du chargement de la vue Piano");
+            showError(
+                    "Erreur de chargement",
+                    "Impossible de charger la vue Piano."
+            );
         }
     }
+
+    private void endPlaybackCleanup() {
+        javafx.application.Platform.runLater(this::clearPlayingStyle);
+
+        if (synth.isOpen()) {
+            for (MidiChannel channel : synth.getChannels()) {
+                channel.allNotesOff();
+            }
+            synth.close();
+        }
+
+        isPlaying = false;
+    }
+
+    private void clearPlayingStyle() {
+        for (int j = 0; j < patternTable.getItems().size(); j++) {
+            TableRow<PatternRow> row = getTableRow(j);
+            if (row != null) row.getStyleClass().remove("playing");
+        }
+    }
+
+    @FXML
+    private void downloadMidi() {
+        try {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Exporter en MIDI");
+            chooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Fichier MIDI (*.mid)", "*.mid")
+            );
+
+            File file = chooser.showSaveDialog(patternTable.getScene().getWindow());
+            if (file == null) return;
+
+            Sequence sequence = new Sequence(Sequence.PPQ, 480);
+            Track track = sequence.createTrack();
+
+            int tick = 0;
+            int tickPerRow = 120;
+
+            for (PatternRow row : patternTable.getItems()) {
+                if (!row.getNote().equals("---")) {
+                    int note = noteToMidi(row.getNote(), Integer.parseInt(row.getOctave()));
+
+                    track.add(new MidiEvent(
+                            new ShortMessage(ShortMessage.NOTE_ON, 0, note, 100),
+                            tick
+                    ));
+
+                    track.add(new MidiEvent(
+                            new ShortMessage(ShortMessage.NOTE_OFF, 0, note, 100),
+                            tick + tickPerRow
+                    ));
+                }
+
+                tick += tickPerRow;
+            }
+
+            MidiSystem.write(sequence, 1, file);
+
+            System.out.println("MIDI exporté : " + file.getAbsolutePath());
+
+        } catch (Exception e) {
+            showError("Erreur d'export", "Impossible d'exporter le fichier MIDI.");
+        }
+    }
+
+    @FXML
+    private void handleSave() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Enregistrer la piste");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Fichier Tracker (*.trk)", "*.trk")
+        );
+
+        File file = chooser.showSaveDialog(patternTable.getScene().getWindow());
+        if (file == null) return;
+
+        try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
+
+            out.println("BPM=" + bpm);
+            out.println("ROW;NOTE;OCT;INST;VOL;FX");
+
+            for (PatternRow row : patternTable.getItems()) {
+                out.printf("%s;%s;%s;%s;%s;%s%n",
+                        row.getRow(),
+                        row.getNote(),
+                        row.getOctave(),
+                        row.getInstrument(),
+                        row.getVolume(),
+                        row.getEffect()
+                );
+            }
+
+            System.out.println("Piste enregistrée : " + file.getAbsolutePath());
+
+        } catch (IOException e) {
+
+            showError("Erreur d'écriture", "Impossible d'enregistrer la piste.");
+        }
+    }
+
+
+    @FXML
+    private void handleLoad() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Charger une piste");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Fichier Tracker (*.trk)", "*.trk")
+        );
+
+        File file = chooser.showOpenDialog(patternTable.getScene().getWindow());
+        if (file == null) return;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+
+            patternTable.getItems().clear();
+            String line;
+
+            line = reader.readLine();
+            if (line != null && line.startsWith("BPM=")) {
+                bpm = Integer.parseInt(line.substring(4));
+                bpmLabel.setText("BPM: " + bpm);
+            }
+
+            line = reader.readLine();
+            if (line != null && line.startsWith("TEMPO=")) {
+                int t = Integer.parseInt(line.substring(6));
+                tempoSlider.setValue(t);
+                tempoLabel.setText("Tempo: " + t);
+            }
+
+            line = reader.readLine();
+
+            while ((line = reader.readLine()) != null) {
+                String[] p = line.split(";");
+                if (p.length == 6) {
+                    patternTable.getItems().add(
+                            new PatternRow(p[0], p[1], p[2], p[3], p[4], p[5])
+                    );
+                }
+            }
+
+            System.out.println("Piste chargée : " + file.getAbsolutePath());
+
+        } catch (IOException e) {
+            showError("Erreur de lecture", "Impossible de charger la piste.");
+        }
+    }
+
 }
