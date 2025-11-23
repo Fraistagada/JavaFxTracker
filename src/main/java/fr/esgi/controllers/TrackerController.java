@@ -10,11 +10,11 @@ import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import javax.sound.midi.MidiChannel;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Synthesizer;
-import java.io.*;
+import javax.sound.midi.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -52,7 +52,7 @@ public class TrackerController {
     @FXML
     private Button pauseBtn;
     @FXML
-    private Button recordBtn;
+    private Button downloadMidi;
 
     private int bpm = Constants.DEFAULT_BPM;
     private final Synthesizer synth = MidiSystem.getSynthesizer();
@@ -211,21 +211,6 @@ public class TrackerController {
         }
     }
 
-    @FXML
-    private void handleRecord() {
-        System.out.println("REC - Mode enregistrement activé");
-
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Enregistrer la piste");
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("Tracker File (*.trk)", "*.trk")
-        );
-        File file = fileChooser.showSaveDialog(patternTable.getScene().getWindow());
-        if (file != null) {
-            savePatternToFile(file);
-        }
-    }
-
     private void playSample(String note, String octave, String instrument) {
         // TODO : choisir l'instrument
         MidiChannel channel = synth.getChannels()[0];
@@ -243,28 +228,6 @@ public class TrackerController {
         return 12 * (octave + 1) + Constants.NOTES.get(note);
     }
 
-
-    private void pausePlayback() {
-        System.out.println("Lecture mise en pause (simulation)");
-    }
-
-    private void savePatternToFile(File file) {
-        try (PrintWriter writer = new PrintWriter(file)) {
-            for (PatternRow row : patternTable.getItems()) {
-                writer.printf("%s;%s;%s;%s;%s;%s%n",
-                        row.getRow(),
-                        row.getNote(),
-                        row.getOctave(),
-                        row.getInstrument(),
-                        row.getVolume(),
-                        row.getEffect()
-                );
-            }
-            System.out.println("Piste enregistrée : " + file.getAbsolutePath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     @FXML
     private void handleOpenFile() {
@@ -339,4 +302,48 @@ public class TrackerController {
         }
     }
 
+    @FXML
+    private void downloadMidi() {
+        try {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Exporter en MIDI");
+            chooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Fichier MIDI (*.mid)", "*.mid")
+            );
+
+            File file = chooser.showSaveDialog(patternTable.getScene().getWindow());
+            if (file == null) return;
+
+            Sequence sequence = new Sequence(Sequence.PPQ, 480);
+            Track track = sequence.createTrack();
+
+            int tick = 0;
+            int tickPerRow = 120;
+
+            for (PatternRow row : patternTable.getItems()) {
+                if (!row.getNote().equals("---")) {
+                    int note = noteToMidi(row.getNote(), Integer.parseInt(row.getOctave()));
+
+                    track.add(new MidiEvent(
+                            new ShortMessage(ShortMessage.NOTE_ON, 0, note, 100),
+                            tick
+                    ));
+
+                    track.add(new MidiEvent(
+                            new ShortMessage(ShortMessage.NOTE_OFF, 0, note, 100),
+                            tick + tickPerRow
+                    ));
+                }
+
+                tick += tickPerRow;
+            }
+
+            MidiSystem.write(sequence, 1, file);
+
+            System.out.println("MIDI exporté : " + file.getAbsolutePath());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
