@@ -11,13 +11,12 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import javax.sound.midi.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static fr.esgi.utils.FxUtils.showError;
 
 public class TrackerController {
 
@@ -256,7 +255,7 @@ public class TrackerController {
             }
             System.out.println("Piste chargée : " + file.getAbsolutePath());
         } catch (IOException e) {
-            e.printStackTrace();
+            showError("Erreur de chargement", "Impossible de charger la piste.");
         }
     }
 
@@ -272,13 +271,15 @@ public class TrackerController {
             Parent root = loader.load();
 
             Stage stage = (Stage) patternTable.getScene().getWindow();
-            Scene scene = new Scene(root, 800, 600);
+            Scene scene = new Scene(root, 1000, 600);
             scene.getStylesheets().add(getClass().getResource("/fr/esgi/styles/tracker-style.css").toExternalForm());
             stage.setScene(scene);
 
         } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Erreur lors du chargement de la vue Piano");
+            showError(
+                    "Erreur de chargement",
+                    "Impossible de charger la vue Piano."
+            );
         }
     }
 
@@ -343,7 +344,91 @@ public class TrackerController {
             System.out.println("MIDI exporté : " + file.getAbsolutePath());
 
         } catch (Exception e) {
-            e.printStackTrace();
+            showError("Erreur d'export", "Impossible d'exporter le fichier MIDI.");
         }
     }
+
+    @FXML
+    private void handleSave() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Enregistrer la piste");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Fichier Tracker (*.trk)", "*.trk")
+        );
+
+        File file = chooser.showSaveDialog(patternTable.getScene().getWindow());
+        if (file == null) return;
+
+        try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
+
+            out.println("BPM=" + bpm);
+            out.println("ROW;NOTE;OCT;INST;VOL;FX");
+
+            for (PatternRow row : patternTable.getItems()) {
+                out.printf("%s;%s;%s;%s;%s;%s%n",
+                        row.getRow(),
+                        row.getNote(),
+                        row.getOctave(),
+                        row.getInstrument(),
+                        row.getVolume(),
+                        row.getEffect()
+                );
+            }
+
+            System.out.println("Piste enregistrée : " + file.getAbsolutePath());
+
+        } catch (IOException e) {
+
+            showError("Erreur d'écriture", "Impossible d'enregistrer la piste.");
+        }
+    }
+
+
+    @FXML
+    private void handleLoad() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Charger une piste");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Fichier Tracker (*.trk)", "*.trk")
+        );
+
+        File file = chooser.showOpenDialog(patternTable.getScene().getWindow());
+        if (file == null) return;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+
+            patternTable.getItems().clear();
+            String line;
+
+            line = reader.readLine();
+            if (line != null && line.startsWith("BPM=")) {
+                bpm = Integer.parseInt(line.substring(4));
+                bpmLabel.setText("BPM: " + bpm);
+            }
+
+            line = reader.readLine();
+            if (line != null && line.startsWith("TEMPO=")) {
+                int t = Integer.parseInt(line.substring(6));
+                tempoSlider.setValue(t);
+                tempoLabel.setText("Tempo: " + t);
+            }
+
+            line = reader.readLine();
+
+            while ((line = reader.readLine()) != null) {
+                String[] p = line.split(";");
+                if (p.length == 6) {
+                    patternTable.getItems().add(
+                            new PatternRow(p[0], p[1], p[2], p[3], p[4], p[5])
+                    );
+                }
+            }
+
+            System.out.println("Piste chargée : " + file.getAbsolutePath());
+
+        } catch (IOException e) {
+            showError("Erreur de lecture", "Impossible de charger la piste.");
+        }
+    }
+
 }

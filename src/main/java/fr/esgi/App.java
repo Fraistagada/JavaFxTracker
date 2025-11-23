@@ -6,6 +6,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import static fr.esgi.utils.FxUtils.showError;
+
 public class App extends Application {
 
     @Override
@@ -15,7 +17,7 @@ public class App extends Application {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fr/esgi/views/TrackerView.fxml"));
             Parent root = loader.load();
 
-            Scene scene = new Scene(root, 800, 600);
+            Scene scene = new Scene(root, 1000, 600);
 
             // Charger le fichier CSS
             scene.getStylesheets().add(getClass().getResource("/fr/esgi/styles/tracker-style.css").toExternalForm());
@@ -25,12 +27,7 @@ public class App extends Application {
             primaryStage.show();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Erreur lors du chargement de l'application: " + e.getMessage());
+            showError("Erreur de démarrage", "Impossible de démarrer l'application: " + e.getMessage());
         }
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }
