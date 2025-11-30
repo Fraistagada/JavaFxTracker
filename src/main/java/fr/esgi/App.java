@@ -6,7 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import static fr.esgi.utils.FxUtils.showError;
+//import static fr.esgi.utils.FxUtils.showError;
 
 public class App extends Application {
 
@@ -27,7 +27,7 @@ public class App extends Application {
             primaryStage.show();
 
         } catch (Exception e) {
-            showError("Erreur de démarrage", "Impossible de démarrer l'application: " + e.getMessage());
+//            showError("Erreur de démarrage", "Impossible de démarrer l'application: " + e.getMessage());
         }
     }
 }
