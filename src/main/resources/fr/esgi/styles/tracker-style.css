@@ -32,10 +32,16 @@
     -fx-text-fill: #00ff00;
 }
 
+/* Headers des colonnes */
 .table-view .column-header {
     -fx-background-color: #333333;
+    -fx-padding: 8;
+}
+
+.table-view .column-header .label {
     -fx-text-fill: #ffaa00;
     -fx-font-weight: bold;
+    -fx-font-family: 'Monospace', 'Courier New', monospace;
     -fx-alignment: CENTER;
 }
 
@@ -44,7 +50,81 @@
 }
 
 .table-view .filler {
-    -fx-background-color: #000000;
+    -fx-background-color: #333333;
+}
+
+/* Ligne en cours de lecture (barre verte) */
+.table-row-cell.playing {
+    -fx-background-color: #00aa00 !important;
+    -fx-text-fill: #000000 !important;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell.playing .table-cell {
+    -fx-text-fill: #000000 !important;
+    -fx-background-color: #00aa00;
+}
+
+/* Style pour les groupes de colonnes (Canal 1, Canal 2) */
+.table-view .nested-column-header {
+    -fx-background-color: #2a2a2a;
+}
+
+.table-view .nested-column-header .label {
+    -fx-text-fill: #00aaff;
+    -fx-font-weight: bold;
+    -fx-font-family: 'Monospace', 'Courier New', monospace;
+}
+
+/* Toggle buttons pour les canaux */
+.toggle-button {
+    -fx-font-family: 'Monospace', 'Courier New', monospace;
+    -fx-cursor: hand;
+}
+
+.toggle-button:selected {
+    -fx-background-color: #00aa00;
+}
+
+/* Colonne séparatrice entre les canaux */
+.separator-column {
+    -fx-background-color: #1a1a1a;
+}
+
+.separator-column .table-cell {
+    -fx-background-color: #1a1a1a;
+    -fx-border-color: transparent;
+}
+
+.separator-column .column-header {
+    -fx-background-color: #1a1a1a;
+}
+
+.separator-column .column-header .label {
+    -fx-text-fill: transparent;
+}
+
+/* Style pour les groupes de colonnes (Canal 1, Canal 2) */
+.channel1-header .label {
+    -fx-text-fill: #00ff00;
+    -fx-font-weight: bold;
+}
+
+.channel2-header .label {
+    -fx-text-fill: #00aaff;
+    -fx-font-weight: bold;
+}
+
+/* Bordure droite du canal 1 pour renforcer la séparation */
+.table-view .table-row-cell .table-cell:nth-child(6) {
+    -fx-border-color: transparent #333333 transparent transparent;
+    -fx-border-width: 0 2 0 0;
+}
+
+/* Bordure gauche du canal 2 */
+.table-view .table-row-cell .table-cell:nth-child(8) {
+    -fx-border-color: transparent transparent transparent #333333;
+    -fx-border-width: 0 0 0 2;
 }
 
 /* Styles pour les boutons */
@@ -62,7 +142,7 @@
     -fx-opacity: 0.6;
 }
 
-/* Styles pour le slider */
+/* Styles pour les sliders */
 .slider .track {
     -fx-background-color: #444444;
 }
@@ -106,14 +186,58 @@
     -fx-border-width: 1;
 }
 
-/* Ligne en cours de lecture (barre verte) */
-.table-row-cell.playing {
-    -fx-background-color: #00aa00 !important;
-    -fx-text-fill: #000000 !important;
-    -fx-font-weight: bold;
+/* === COMBOBOX STYLES === */
+.combo-box {
+    -fx-background-color: #333333;
+    -fx-border-color: #555555;
+    -fx-border-width: 1;
 }
 
-.table-row-cell.playing .table-cell {
-    -fx-text-fill: #000000 !important;
-    -fx-background-color: #00aa00;
+.combo-box .list-cell {
+    -fx-background-color: #333333;
+    -fx-text-fill: #00ff00;
+    -fx-font-family: 'Monospace', 'Courier New', monospace;
+}
+
+.combo-box .arrow-button {
+    -fx-background-color: #444444;
+}
+
+.combo-box .arrow {
+    -fx-background-color: #00ff00;
+}
+
+/* ComboBox popup list */
+.combo-box-popup .list-view {
+    -fx-background-color: #222222;
+    -fx-border-color: #555555;
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: #222222;
+    -fx-text-fill: #00ff00;
+    -fx-font-family: 'Monospace', 'Courier New', monospace;
+    -fx-padding: 5 10;
+}
+
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: #003300;
+}
+
+.combo-box-popup .list-view .list-cell:selected {
+    -fx-background-color: #004400;
+    -fx-text-fill: #00ff00;
+}
+
+/* === TEXTFIELD STYLES === */
+.text-field {
+    -fx-background-color: #333333;
+    -fx-text-fill: #00ff00;
+    -fx-font-family: 'Monospace', 'Courier New', monospace;
+    -fx-border-color: #555555;
+    -fx-border-width: 1;
+}
+
+.text-field:focused {
+    -fx-border-color: #00aa00;
 }
