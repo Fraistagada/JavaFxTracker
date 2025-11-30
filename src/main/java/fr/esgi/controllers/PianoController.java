@@ -6,25 +6,38 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 
+import static fr.esgi.utils.FxUtils.showError;
+
 public class PianoController {
 
-    @FXML private HBox pianoContainer;
-    @FXML private Label patternLabel;
-    @FXML private Label bpmLabel;
-    @FXML private Label tempoLabel;
-    @FXML private Slider tempoSlider;
+    @FXML
+    private HBox pianoContainer;
+    @FXML
+    private Label patternLabel;
+    @FXML
+    private Label bpmLabel;
+    @FXML
+    private Label tempoLabel;
+    @FXML
+    private Slider tempoSlider;
 
-    @FXML private Button playBtn;
-    @FXML private Button stopBtn;
-    @FXML private Button pauseBtn;
-    @FXML private Button recordBtn;
+    @FXML
+    private Button playBtn;
+    @FXML
+    private Button stopBtn;
+    @FXML
+    private Button pauseBtn;
+    @FXML
+    private Button recordBtn;
 
     private int currentPattern = 0;
     private int bpm = 125;
@@ -145,13 +158,12 @@ public class PianoController {
             Parent root = loader.load();
 
             Stage stage = (Stage) pianoContainer.getScene().getWindow();
-            Scene scene = new Scene(root, 800, 600);
+            Scene scene = new Scene(root, 1000, 600);
             scene.getStylesheets().add(getClass().getResource("/fr/esgi/styles/tracker-style.css").toExternalForm());
             stage.setScene(scene);
 
         } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Erreur lors du chargement de la vue Tracker");
+            showError("Erreur de chargement", "Impossible de charger la vue Tracker.\nDétails: " + e.getMessage());
         }
     }
 

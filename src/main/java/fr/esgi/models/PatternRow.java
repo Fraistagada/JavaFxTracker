@@ -3,12 +3,12 @@ package fr.esgi.models;
 import javafx.beans.property.SimpleStringProperty;
 
 public class PatternRow {
-    private SimpleStringProperty row;
-    private SimpleStringProperty note;
-    private SimpleStringProperty octave;
-    private SimpleStringProperty instrument;
-    private SimpleStringProperty volume;
-    private SimpleStringProperty effect;
+    private final SimpleStringProperty row;
+    private final SimpleStringProperty note;
+    private final SimpleStringProperty octave;
+    private final SimpleStringProperty instrument;
+    private final SimpleStringProperty volume;
+    private final SimpleStringProperty effect;
 
     public PatternRow(String row, String note, String octave,
                       String instrument, String volume, String effect) {
@@ -75,11 +75,16 @@ public class PatternRow {
         this.row.set(row);
     }
 
-    public void setNote(String note) {
+    public void setSound(String note, String octave) {
+        setNote(note);
+        setOctave(octave);
+    }
+
+    private void setNote(String note) {
         this.note.set(note);
     }
 
-    public void setOctave(String octave) {
+    private void setOctave(String octave) {
         this.octave.set(octave);
     }
 

@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="fr.esgi.controllers.TrackerController"
@@ -13,12 +10,14 @@
     <!-- Top Bar -->
     <top>
         <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: #2b2b2b; -fx-padding: 10;">
-            <Label text="AUDIO TRACKER" style="-fx-text-fill: #00ff00; -fx-font-family: monospace; -fx-font-weight: bold; -fx-font-size: 16;"/>
+            <Label text="AUDIO TRACKER"
+                   style="-fx-text-fill: #00ff00; -fx-font-family: monospace; -fx-font-weight: bold; -fx-font-size: 16;"/>
             <Separator orientation="VERTICAL"/>
             <Label fx:id="patternLabel" text="Pattern: 00" style="-fx-text-fill: #ffffff; -fx-font-family: monospace;"/>
             <Label fx:id="bpmLabel" text="BPM: 125" style="-fx-text-fill: #ffffff; -fx-font-family: monospace;"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Tracker" onAction="#showTracker" style="-fx-background-color: #00aa00; -fx-text-fill: white;"/>
+            <Button text="Tracker" onAction="#showTracker"
+                    style="-fx-background-color: #00aa00; -fx-text-fill: white;"/>
             <Button text="Piano" onAction="#showPiano" style="-fx-background-color: #555555; -fx-text-fill: white;"/>
         </HBox>
     </top>
@@ -37,9 +36,9 @@
                        style="-fx-background-color: #000000; -fx-control-inner-background: #000000;">
                 <columns>
                     <TableColumn fx:id="rowColumn" text="Row" prefWidth="60" style="-fx-alignment: CENTER;"/>
-                    <TableColumn fx:id="noteColumn" text="Note" prefWidth="80" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="noteColumn" text="Note" style="-fx-alignment: CENTER;"/>
                     <TableColumn fx:id="octaveColumn" text="Oct" prefWidth="60" style="-fx-alignment: CENTER;"/>
-                    <TableColumn fx:id="instrumentColumn" text="Inst" prefWidth="80" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="instrumentColumn" text="Inst" style="-fx-alignment: CENTER;"/>
                     <TableColumn fx:id="volumeColumn" text="Vol" prefWidth="60" style="-fx-alignment: CENTER;"/>
                     <TableColumn fx:id="effectColumn" text="FX" prefWidth="100" style="-fx-alignment: CENTER;"/>
                 </columns>
@@ -56,7 +55,11 @@
                     style="-fx-background-color: #aa0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
             <Button fx:id="pauseBtn" text="❚❚ PAUSE" onAction="#handlePause"
                     style="-fx-background-color: #aa8800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
-            <Button fx:id="recordBtn" text="● REC" onAction="#handleRecord"
+            <Button fx:id="saveBtn" text="⭳ Enregistrer" onAction="#handleSave"
+                    style="-fx-background-color: #0019aa; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+            <Button fx:id="loadBtn" text="⭱ Charger" onAction="#handleLoad"
+                    style="-fx-background-color: #00aaa2; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+            <Button fx:id="downloadMidi" text="🎘 .midi" onAction="#downloadMidi"
                     style="-fx-background-color: #666666; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
             <Separator orientation="VERTICAL"/>
             <Label fx:id="tempoLabel" text="Tempo: 125" style="-fx-text-fill: white; -fx-font-family: monospace;"/>
