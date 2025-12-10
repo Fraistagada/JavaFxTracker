@@ -25,7 +25,7 @@ public class CreditsController {
                 
                 - Arno FRESNEDA, la fraise tagada
                 
-                - Floriant BRIERE, le prompt engineer
+                - Florian BRIERE, le prompt engineer
                 """;
         creditsTextArea.setText(text);
     }
