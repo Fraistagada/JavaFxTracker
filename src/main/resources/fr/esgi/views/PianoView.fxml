@@ -13,13 +13,14 @@
     <!-- Top Bar -->
     <top>
         <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: #2b2b2b; -fx-padding: 10;">
-            <Label text="AUDIO TRACKER" style="-fx-text-fill: #00ff00; -fx-font-family: monospace; -fx-font-weight: bold; -fx-font-size: 16;"/>
+            <Label text="AUDIO TRACKER" style="-fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-font-size: 16;"/>
             <Separator orientation="VERTICAL"/>
-            <Label fx:id="patternLabel" text="Pattern: 00" style="-fx-text-fill: #ffffff; -fx-font-family: monospace;"/>
-            <Label fx:id="bpmLabel" text="BPM: 125" style="-fx-text-fill: #ffffff; -fx-font-family: monospace;"/>
+            <Label fx:id="patternLabel" text="Pattern: 00" style="-fx-text-fill: #ffffff;"/>
+            <Label fx:id="bpmLabel" text="BPM: 125" style="-fx-text-fill: #ffffff;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Button text="Tracker" onAction="#showTracker" style="-fx-background-color: #555555; -fx-text-fill: white;"/>
             <Button text="Piano" onAction="#showPiano" style="-fx-background-color: #00aa00; -fx-text-fill: white;"/>
+            <Button text="Crédits" onAction="#showCredits" style="-fx-background-color: #666666; -fx-text-fill: white;"/>
         </HBox>
     </top>
 
@@ -27,13 +28,13 @@
     <center>
         <VBox spacing="20" alignment="CENTER" style="-fx-background-color: #1a1a1a; -fx-padding: 20;">
             <Label text="PIANO KEYBOARD"
-                   style="-fx-text-fill: #00ff00; -fx-font-family: monospace; -fx-font-weight: bold; -fx-font-size: 18;"/>
+                   style="-fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-font-size: 18;"/>
 
             <!-- Piano Container -->
             <HBox fx:id="pianoContainer" spacing="2" alignment="CENTER"/>
 
             <Label text="Cliquez sur les touches pour jouer des notes"
-                   style="-fx-text-fill: #aaaaaa; -fx-font-family: monospace;"/>
+                   style="-fx-text-fill: #aaaaaa;"/>
         </VBox>
     </center>
 
@@ -41,15 +42,15 @@
     <bottom>
         <HBox spacing="10" alignment="CENTER" style="-fx-background-color: #2b2b2b; -fx-padding: 10;">
             <Button fx:id="playBtn" text="▶ PLAY" onAction="#handlePlay"
-                    style="-fx-background-color: #00aa00; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+                    style="-fx-background-color: #00aa00; -fx-text-fill: white; -fx-font-weight: bold;"/>
             <Button fx:id="stopBtn" text="■ STOP" onAction="#handleStop"
-                    style="-fx-background-color: #aa0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+                    style="-fx-background-color: #aa0000; -fx-text-fill: white; -fx-font-weight: bold;"/>
             <Button fx:id="pauseBtn" text="❚❚ PAUSE" onAction="#handlePause"
-                    style="-fx-background-color: #aa8800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+                    style="-fx-background-color: #aa8800; -fx-text-fill: white; -fx-font-weight: bold;"/>
             <Button fx:id="recordBtn" text="● REC" onAction="#handleRecord"
-                    style="-fx-background-color: #666666; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+                    style="-fx-background-color: #666666; -fx-text-fill: white; -fx-font-weight: bold;"/>
             <Separator orientation="VERTICAL"/>
-            <Label fx:id="tempoLabel" text="Tempo: 125" style="-fx-text-fill: white; -fx-font-family: monospace;"/>
+            <Label fx:id="tempoLabel" text="Tempo: 125" style="-fx-text-fill: white;"/>
             <Slider fx:id="tempoSlider" min="60" max="200" value="125" prefWidth="150"/>
         </HBox>
     </bottom>

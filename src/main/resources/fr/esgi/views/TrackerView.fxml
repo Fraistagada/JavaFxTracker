@@ -12,14 +12,15 @@
     <top>
         <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: #2b2b2b; -fx-padding: 10;">
             <Label text="AUDIO TRACKER"
-                   style="-fx-text-fill: #00ff00; -fx-font-family: monospace; -fx-font-weight: bold; -fx-font-size: 16;"/>
+                   style="-fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-font-size: 16;"/>
             <Separator orientation="VERTICAL"/>
-            <Label fx:id="patternLabel" text="Pattern: 00" style="-fx-text-fill: #ffffff; -fx-font-family: monospace;"/>
-            <Label fx:id="bpmLabel" text="BPM: 125" style="-fx-text-fill: #ffffff; -fx-font-family: monospace;"/>
+            <Label fx:id="patternLabel" text="Pattern: 00" style="-fx-text-fill: #ffffff;"/>
+            <Label fx:id="bpmLabel" text="BPM: 125" style="-fx-text-fill: #ffffff"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Button text="Tracker" onAction="#showTracker"
                     style="-fx-background-color: #00aa00; -fx-text-fill: white;"/>
             <Button text="Piano" onAction="#showPiano" style="-fx-background-color: #555555; -fx-text-fill: white;"/>
+            <Button text="Crédits" onAction="#showCredits" style="-fx-background-color: #666666; -fx-text-fill: white;"/>
         </HBox>
     </top>
 
@@ -65,21 +66,21 @@
     <right>
         <VBox fx:id="editPanel" spacing="10" style="-fx-background-color: #2b2b2b; -fx-padding: 15;" prefWidth="280">
             <Label text="ÉDITION"
-                   style="-fx-text-fill: #00ff00; -fx-font-family: monospace; -fx-font-weight: bold; -fx-font-size: 14;"/>
+                   style="-fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-font-size: 14;"/>
 
             <Separator/>
 
             <Label fx:id="selectedRowLabel" text="Ligne: --"
-                   style="-fx-text-fill: #ffaa00; -fx-font-family: monospace;"/>
+                   style="-fx-text-fill: #ffaa00;"/>
 
             <!-- Sélection du canal -->
             <VBox spacing="3">
-                <Label text="Canal:" style="-fx-text-fill: white; -fx-font-family: monospace;"/>
+                <Label text="Canal:" style="-fx-text-fill: white;"/>
                 <HBox spacing="10">
                     <ToggleButton fx:id="channel1Btn" text="Canal 1" selected="true"
-                                  style="-fx-background-color: #00aa00; -fx-text-fill: white; -fx-font-family: monospace;"/>
+                                  style="-fx-background-color: #00aa00; -fx-text-fill: white;"/>
                     <ToggleButton fx:id="channel2Btn" text="Canal 2"
-                                  style="-fx-background-color: #555555; -fx-text-fill: white; -fx-font-family: monospace;"/>
+                                  style="-fx-background-color: #555555; -fx-text-fill: white;"/>
                 </HBox>
             </VBox>
 
@@ -87,43 +88,43 @@
 
             <!-- Note -->
             <VBox spacing="3">
-                <Label text="Note:" style="-fx-text-fill: white; -fx-font-family: monospace;"/>
+                <Label text="Note:" style="-fx-text-fill: white;"/>
                 <ComboBox fx:id="noteCombo" prefWidth="250"/>
             </VBox>
 
             <!-- Octave -->
             <VBox spacing="3">
-                <Label text="Octave:" style="-fx-text-fill: white; -fx-font-family: monospace;"/>
+                <Label text="Octave:" style="-fx-text-fill: white;"/>
                 <ComboBox fx:id="octaveCombo" prefWidth="250"/>
             </VBox>
 
             <!-- Instrument -->
             <VBox spacing="3">
-                <Label text="Instrument:" style="-fx-text-fill: white; -fx-font-family: monospace;"/>
+                <Label text="Instrument:" style="-fx-text-fill: white;"/>
                 <ComboBox fx:id="instrumentCombo" prefWidth="250"/>
             </VBox>
 
             <!-- Volume -->
             <VBox spacing="3">
-                <Label text="Volume:" style="-fx-text-fill: white; -fx-font-family: monospace;"/>
+                <Label text="Volume:" style="-fx-text-fill: white;"/>
                 <HBox spacing="5" alignment="CENTER_LEFT">
                     <Slider fx:id="volumeSlider" min="0" max="127" value="100" prefWidth="200"/>
                     <Label fx:id="volumeValueLabel" text="100" prefWidth="35"
-                           style="-fx-text-fill: white; -fx-font-family: monospace;"/>
+                           style="-fx-text-fill: white;"/>
                 </HBox>
             </VBox>
 
             <!-- Effet -->
             <VBox spacing="3">
-                <Label text="Effet:" style="-fx-text-fill: white; -fx-font-family: monospace;"/>
+                <Label text="Effet:" style="-fx-text-fill: white;"/>
                 <ComboBox fx:id="effectTypeCombo" prefWidth="250"/>
                 <HBox spacing="5" alignment="CENTER_LEFT">
-                    <Label text="Params:" style="-fx-text-fill: #aaaaaa; -fx-font-family: monospace;"/>
+                    <Label text="Params:" style="-fx-text-fill: #aaaaaa;"/>
                     <TextField fx:id="effectParamField" prefWidth="60" maxWidth="60" promptText="00"
-                               style="-fx-background-color: #333; -fx-text-fill: #00ff00; -fx-font-family: monospace;"/>
+                               style="-fx-background-color: #333; -fx-text-fill: #00ff00;"/>
                 </HBox>
                 <Label fx:id="effectDescLabel" text="" wrapText="true" prefWidth="250"
-                       style="-fx-text-fill: #888888; -fx-font-family: monospace; -fx-font-size: 10;"/>
+                       style="-fx-text-fill: #888888; -fx-font-size: 10;"/>
             </VBox>
         </VBox>
     </right>
@@ -132,19 +133,19 @@
     <bottom>
         <HBox spacing="10" alignment="CENTER" style="-fx-background-color: #2b2b2b; -fx-padding: 10;">
             <Button fx:id="playBtn" text="▶ PLAY" onAction="#handlePlay"
-                    style="-fx-background-color: #00aa00; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+                    style="-fx-background-color: #00aa00; -fx-text-fill: white; -fx-font-weight: bold;"/>
             <Button fx:id="stopBtn" text="■ STOP" onAction="#handleStop"
-                    style="-fx-background-color: #aa0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+                    style="-fx-background-color: #aa0000; -fx-text-fill: white; -fx-font-weight: bold;"/>
             <Button fx:id="pauseBtn" text="❚❚ PAUSE" onAction="#handlePause"
-                    style="-fx-background-color: #aa8800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+                    style="-fx-background-color: #aa8800; -fx-text-fill: white; -fx-font-weight: bold;"/>
             <Button fx:id="saveBtn" text="⭳ Enregistrer" onAction="#handleSave"
-                    style="-fx-background-color: #0019aa; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+                    style="-fx-background-color: #0019aa; -fx-text-fill: white; -fx-font-weight: bold;"/>
             <Button fx:id="loadBtn" text="⭱ Charger" onAction="#handleLoad"
-                    style="-fx-background-color: #00aaa2; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+                    style="-fx-background-color: #00aaa2; -fx-text-fill: white; -fx-font-weight: bold;"/>
             <Button fx:id="downloadMidi" text="🎘 .midi" onAction="#downloadMidi"
-                    style="-fx-background-color: #666666; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: monospace;"/>
+                    style="-fx-background-color: #666666; -fx-text-fill: white; -fx-font-weight: bold;"/>
             <Separator orientation="VERTICAL"/>
-            <Label fx:id="tempoLabel" text="Tempo: 125" style="-fx-text-fill: white; -fx-font-family: monospace;"/>
+            <Label fx:id="tempoLabel" text="Tempo: 125" style="-fx-text-fill: white;"/>
             <Slider fx:id="tempoSlider" min="60" max="200" value="125" prefWidth="150"/>
         </HBox>
     </bottom>

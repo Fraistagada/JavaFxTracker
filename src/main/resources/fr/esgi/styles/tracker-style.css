@@ -5,7 +5,6 @@
 
 /* Styles pour le TableView du Pattern */
 .table-view {
-    -fx-font-family: 'Monospace', 'Courier New', monospace;
     -fx-font-size: 12px;
     -fx-background-color: #000000;
 }
@@ -41,7 +40,6 @@
 .table-view .column-header .label {
     -fx-text-fill: #ffaa00;
     -fx-font-weight: bold;
-    -fx-font-family: 'Monospace', 'Courier New', monospace;
     -fx-alignment: CENTER;
 }
 
@@ -73,12 +71,10 @@
 .table-view .nested-column-header .label {
     -fx-text-fill: #00aaff;
     -fx-font-weight: bold;
-    -fx-font-family: 'Monospace', 'Courier New', monospace;
 }
 
 /* Toggle buttons pour les canaux */
 .toggle-button {
-    -fx-font-family: 'Monospace', 'Courier New', monospace;
     -fx-cursor: hand;
 }
 
@@ -131,7 +127,6 @@
 .button {
     -fx-padding: 8 15 8 15;
     -fx-cursor: hand;
-    -fx-font-family: 'Monospace', 'Courier New', monospace;
 }
 
 .button:hover {
@@ -175,11 +170,6 @@
     -fx-background-color: #00ff00;
 }
 
-/* Labels */
-.label {
-    -fx-font-family: 'Monospace', 'Courier New', monospace;
-}
-
 /* Separators */
 .separator .line {
     -fx-border-color: #444444;
@@ -196,7 +186,6 @@
 .combo-box .list-cell {
     -fx-background-color: #333333;
     -fx-text-fill: #00ff00;
-    -fx-font-family: 'Monospace', 'Courier New', monospace;
 }
 
 .combo-box .arrow-button {
@@ -216,7 +205,6 @@
 .combo-box-popup .list-view .list-cell {
     -fx-background-color: #222222;
     -fx-text-fill: #00ff00;
-    -fx-font-family: 'Monospace', 'Courier New', monospace;
     -fx-padding: 5 10;
 }
 
@@ -233,7 +221,6 @@
 .text-field {
     -fx-background-color: #333333;
     -fx-text-fill: #00ff00;
-    -fx-font-family: 'Monospace', 'Courier New', monospace;
     -fx-border-color: #555555;
     -fx-border-width: 1;
 }
