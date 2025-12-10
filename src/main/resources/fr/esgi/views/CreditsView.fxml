@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="fr.esgi.controllers.CreditsController"
+            styleClass="root">
+
+    <!-- Top Bar -->
+    <top>
+        <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: #2b2b2b; -fx-padding: 10;">
+            <Label text="AUDIO TRACKER"
+                   style="-fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-font-size: 16;"/>
+            <Separator orientation="VERTICAL"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Tracker" onAction="#showTracker"
+                    style="-fx-background-color: #555555; -fx-text-fill: white;"/>
+            <Button text="Piano" onAction="#showPiano" style="-fx-background-color: #555555; -fx-text-fill: white;"/>
+            <Button text="Crédits" style="-fx-background-color: #00aa00; -fx-text-fill: white;"/>
+        </HBox>
+    </top>
+
+    <!-- Center - Crédits -->
+    <center>
+        <VBox alignment="TOP_CENTER" spacing="10" style="-fx-padding: 30; -fx-background-color: #1a1a1a;">
+            <Label text="CRÉDITS" style="-fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-font-size: 20;"/>
+            <TextArea fx:id="creditsTextArea"
+                      prefRowCount="10"
+                      prefWidth="600"
+                      wrapText="true"
+                      editable="false"
+                      style="-fx-control-inner-background: #000000; -fx-text-fill: #00ff00; -fx-font-family: arial; -fx-font-size: 15;">
+            </TextArea>
+        </VBox>
+    </center>
+
+</BorderPane>
+
