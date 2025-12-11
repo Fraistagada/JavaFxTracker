@@ -15,13 +15,11 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import javax.sound.midi.*;
-import java.io.*;
+import javax.sound.midi.MidiUnavailableException;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static fr.esgi.utils.FxUtils.showError;
 
@@ -108,12 +106,11 @@ public class TrackerController {
     private Label effectDescLabel;
 
     private int bpm = Constants.DEFAULT_BPM;
-    private final Synthesizer synth = MidiSystem.getSynthesizer();
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
-    private Thread playThread;
-    private volatile boolean isPlaying = false;
-    private volatile boolean isPaused = false;
+    private fr.esgi.service.MidiPlaybackService midiService;
+    private fr.esgi.service.PersistenceService persistenceService;
+    private fr.esgi.service.PatternService patternService;
+
     private int currentRowIndex = 0;
 
     // Currently selected row for editing
@@ -126,7 +123,19 @@ public class TrackerController {
     // ToggleGroup pour les boutons de canal
     private ToggleGroup channelToggleGroup;
 
-    public TrackerController() throws MidiUnavailableException {
+    public TrackerController() {
+    }
+
+    public void setMidiPlaybackService(fr.esgi.service.MidiPlaybackService midiService) {
+        this.midiService = midiService;
+    }
+
+    public void setPersistenceService(fr.esgi.service.PersistenceService persistenceService) {
+        this.persistenceService = persistenceService;
+    }
+
+    public void setPatternService(fr.esgi.service.PatternService patternService) {
+        this.patternService = patternService;
     }
 
     @FXML
@@ -468,154 +477,51 @@ public class TrackerController {
     }
 
     @FXML
-    private void handlePlay() throws MidiUnavailableException {
-        if (isPlaying && !isPaused) {
+    private void handlePlay() {
+        if (midiService == null) {
+            showError("Erreur MIDI", "Service MIDI non initialisé");
             return;
         }
 
-        if (isPaused) {
-            isPaused = false;
-            return;
-        }
-
-        isPlaying = true;
-        isPaused = false;
-        synth.open();
-
-        playThread = new Thread(() -> {
-            try {
-                for (int i = currentRowIndex; i < patternTable.getItems().size() && isPlaying; i++) {
-
-                    while (isPaused) {
-                        Thread.sleep(50);
-                    }
-
-                    currentRowIndex = i;
-                    PatternRow row = patternTable.getItems().get(i);
-
-                    // Jouer les deux canaux simultanément
-                    if (row.hasNote(1)) {
-                        playSample(1, row.getNote(1), row.getOctave(1), row.getInstrument(1),
-                                Integer.parseInt(row.getVolume(1)), row.getEffect(1));
-                    }
-
-                    if (row.hasNote(2)) {
-                        playSample(2, row.getNote(2), row.getOctave(2), row.getInstrument(2),
-                                Integer.parseInt(row.getVolume(2)), row.getEffect(2));
-                    }
-
+        try {
+            midiService.startPlayback(new ArrayList<>(patternTable.getItems()), currentRowIndex, bpm, new fr.esgi.service.PlaybackListener() {
+                @Override
+                public void onRowPlayed(int rowIndex) {
+                    currentRowIndex = rowIndex;
                     javafx.application.Platform.runLater(() -> {
                         clearPlayingStyle();
                         TableRow<PatternRow> currentRow = getTableRow(currentRowIndex);
                         if (currentRow != null) currentRow.getStyleClass().add("playing");
                     });
-
-                    int delay = (int) ((60.0 / bpm) * 1000 / 4);
-                    Thread.sleep(delay);
                 }
 
-            } catch (InterruptedException ignored) {
-            } finally {
-                if (!isPaused) {
-                    endPlaybackCleanup();
-                    currentRowIndex = 0;
+                @Override
+                public void onPlaybackEnded() {
+                    javafx.application.Platform.runLater(() -> {
+                        endPlaybackCleanup();
+                        currentRowIndex = 0;
+                    });
                 }
-            }
-        });
-
-        playThread.start();
+            });
+        } catch (MidiUnavailableException e) {
+            showError("Erreur MIDI", "Impossible de démarrer la lecture: " + e.getMessage());
+        }
     }
 
-    private void playSample(int channel, String note, String octave, String instrument, int volume, String effect) {
-        // Utiliser un canal MIDI différent pour chaque piste (0 et 1)
-        MidiChannel midiChannel = synth.getChannels()[channel - 1];
-
-        // Changer l'instrument
-        int instrumentId = Instruments.getMidiId(instrument);
-        midiChannel.programChange(instrumentId);
-
-        int noteMidi = noteToMidi(note, Integer.parseInt(octave));
-        int duration = (int) ((60.0 / bpm) * 1000);
-        int vel = Math.max(0, Math.min(127, volume));
-
-        // Appliquer les effets
-        Effects.EffectData fx = Effects.parse(effect);
-
-        if (!fx.isEmpty()) {
-            switch (fx.type) {
-                case "8" -> {
-                    int pan = Math.min(127, fx.fullParam);
-                    midiChannel.controlChange(10, pan);
-                }
-                case "C" -> vel = Math.min(127, fx.fullParam);
-                case "F" -> {
-                    if (fx.fullParam >= 0x20) {
-                        final int newBpm = fx.fullParam;
-                        javafx.application.Platform.runLater(() -> tempoSlider.setValue(newBpm));
-                    }
-                }
-            }
-        }
-
-        midiChannel.noteOn(noteMidi, vel);
-
-        if (!fx.isEmpty()) {
-            switch (fx.type) {
-                case "4" -> {
-                    int speed = fx.param1;
-                    int depth = fx.param2;
-                    if (speed > 0 && depth > 0) {
-                        applyVibrato(midiChannel, noteMidi, speed, depth, duration);
-                    }
-                }
-                case "0" -> {
-                    if (fx.param1 > 0 || fx.param2 > 0) {
-                        applyArpeggio(midiChannel, noteMidi, fx.param1, fx.param2, vel, duration);
-                        return;
-                    }
-                }
-            }
-        }
-
-        scheduler.schedule(() -> midiChannel.noteOff(noteMidi), duration, TimeUnit.MILLISECONDS);
+    @FXML
+    private void handleStop() {
+        if (midiService != null) midiService.stop();
+        currentRowIndex = 0;
+        endPlaybackCleanup();
     }
 
-    private void applyVibrato(MidiChannel channel, int note, int speed, int depth, int duration) {
-        int steps = duration / 50;
-        int currentDepth = depth * 100;
-
-        for (int i = 0; i < steps; i++) {
-            final int step = i;
-            scheduler.schedule(() -> {
-                double angle = (step * speed * Math.PI) / 8;
-                int bend = (int) (8192 + Math.sin(angle) * currentDepth);
-                bend = Math.max(0, Math.min(16383, bend));
-                channel.setPitchBend(bend);
-            }, i * 50L, TimeUnit.MILLISECONDS);
-        }
-
-        scheduler.schedule(() -> channel.setPitchBend(8192), duration, TimeUnit.MILLISECONDS);
+    @FXML
+    private void handlePause() {
+        if (midiService != null) midiService.pause();
     }
 
-    private void applyArpeggio(MidiChannel channel, int baseNote, int semi1, int semi2, int velocity, int duration) {
-        int[] notes = {baseNote, baseNote + semi1, baseNote + semi2};
-        int stepDuration = duration / 6;
-
-        for (int i = 0; i < 6; i++) {
-            final int noteIndex = i % 3;
-            final int currentNote = notes[noteIndex];
-
-            scheduler.schedule(() -> {
-                channel.allNotesOff();
-                channel.noteOn(currentNote, velocity);
-            }, i * stepDuration, TimeUnit.MILLISECONDS);
-        }
-
-        scheduler.schedule(() -> channel.noteOff(notes[0]), duration, TimeUnit.MILLISECONDS);
-    }
-
-    private static int noteToMidi(String note, int octave) {
-        return 12 * (octave + 1) + Constants.NOTES.get(note);
+    private void endPlaybackCleanup() {
+        javafx.application.Platform.runLater(this::clearPlayingStyle);
     }
 
     private TableRow<PatternRow> getTableRow(int index) {
@@ -631,44 +537,6 @@ public class TrackerController {
         return null;
     }
 
-    @FXML
-    private void handleStop() {
-        isPlaying = false;
-        isPaused = false;
-        currentRowIndex = 0;
-
-        if (playThread != null && playThread.isAlive()) {
-            playThread.interrupt();
-        }
-
-        endPlaybackCleanup();
-    }
-
-    @FXML
-    private void handlePause() {
-        isPaused = true;
-
-        if (synth.isOpen()) {
-            for (MidiChannel channel : synth.getChannels()) {
-                channel.allNotesOff();
-            }
-        }
-    }
-
-    private void endPlaybackCleanup() {
-        javafx.application.Platform.runLater(this::clearPlayingStyle);
-
-        if (synth.isOpen()) {
-            for (MidiChannel channel : synth.getChannels()) {
-                channel.allNotesOff();
-                channel.setPitchBend(8192);
-            }
-            synth.close();
-        }
-
-        isPlaying = false;
-    }
-
     private void clearPlayingStyle() {
         for (int j = 0; j < patternTable.getItems().size(); j++) {
             TableRow<PatternRow> row = getTableRow(j);
@@ -677,29 +545,8 @@ public class TrackerController {
     }
 
     public void cleanup() {
-        isPlaying = false;
-        isPaused = false;
-
-        if (playThread != null && playThread.isAlive()) {
-            playThread.interrupt();
-        }
-
-        if (synth.isOpen()) {
-            for (MidiChannel channel : synth.getChannels()) {
-                channel.allNotesOff();
-            }
-            synth.close();
-        }
-
-        scheduler.shutdown();
-        try {
-            if (!scheduler.awaitTermination(500, TimeUnit.MILLISECONDS)) {
-                scheduler.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            scheduler.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
+        if (midiService != null) midiService.cleanup();
+        javafx.application.Platform.runLater(this::clearPlayingStyle);
     }
 
     @FXML
@@ -713,6 +560,14 @@ public class TrackerController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fr/esgi/views/PianoView.fxml"));
             Parent root = loader.load();
+
+            Object controller = loader.getController();
+            if (controller instanceof fr.esgi.controllers.PianoController) {
+                fr.esgi.controllers.PianoController pc = (fr.esgi.controllers.PianoController) controller;
+                pc.setPatternService(patternService);
+                pc.setPersistenceService(persistenceService);
+                pc.setMidiPlaybackService(midiService);
+            }
 
             Stage stage = (Stage) patternTable.getScene().getWindow();
             Scene scene = new Scene(root, 1000, 600);
@@ -732,6 +587,14 @@ public class TrackerController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fr/esgi/views/CreditsView.fxml"));
             Parent root = loader.load();
 
+            Object controller = loader.getController();
+            if (controller instanceof fr.esgi.controllers.CreditsController) {
+                fr.esgi.controllers.CreditsController cc = (fr.esgi.controllers.CreditsController) controller;
+                cc.setPatternService(patternService);
+                cc.setPersistenceService(persistenceService);
+                cc.setMidiPlaybackService(midiService);
+            }
+
             Stage stage = (Stage) patternTable.getScene().getWindow();
             Scene scene = new Scene(root, 1000, 600);
             scene.getStylesheets().add(getClass().getResource("/fr/esgi/styles/tracker-style.css").toExternalForm());
@@ -744,6 +607,11 @@ public class TrackerController {
 
     @FXML
     private void downloadMidi() {
+        if (persistenceService == null) {
+            showError("Erreur d'export", "Service de persistance non initialisé");
+            return;
+        }
+
         try {
             FileChooser chooser = new FileChooser();
             chooser.setTitle("Exporter en MIDI");
@@ -754,36 +622,7 @@ public class TrackerController {
             File file = chooser.showSaveDialog(patternTable.getScene().getWindow());
             if (file == null) return;
 
-            Sequence sequence = new Sequence(Sequence.PPQ, 480);
-            Track track1 = sequence.createTrack();
-            Track track2 = sequence.createTrack();
-
-            int tick = 0;
-            int tickPerRow = 120;
-
-            for (PatternRow row : patternTable.getItems()) {
-                // Canal 1
-                if (row.hasNote(1)) {
-                    int note = noteToMidi(row.getNote(1), Integer.parseInt(row.getOctave(1)));
-                    int vel = Math.min(127, Integer.parseInt(row.getVolume(1)));
-
-                    track1.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 0, note, vel), tick));
-                    track1.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 0, note, 0), tick + tickPerRow));
-                }
-
-                // Canal 2
-                if (row.hasNote(2)) {
-                    int note = noteToMidi(row.getNote(2), Integer.parseInt(row.getOctave(2)));
-                    int vel = Math.min(127, Integer.parseInt(row.getVolume(2)));
-
-                    track2.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_ON, 1, note, vel), tick));
-                    track2.add(new MidiEvent(new ShortMessage(ShortMessage.NOTE_OFF, 1, note, 0), tick + tickPerRow));
-                }
-
-                tick += tickPerRow;
-            }
-
-            MidiSystem.write(sequence, 1, file);
+            persistenceService.exportMidi(file, new ArrayList<>(patternTable.getItems()), bpm);
 
         } catch (Exception e) {
             showError("Erreur d'export", "Impossible d'exporter le fichier MIDI: " + e.getMessage());
@@ -792,6 +631,11 @@ public class TrackerController {
 
     @FXML
     private void handleSave() {
+        if (persistenceService == null) {
+            showError("Erreur d'écriture", "Service de persistance non initialisé");
+            return;
+        }
+
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Enregistrer la piste");
         chooser.getExtensionFilters().add(
@@ -801,27 +645,20 @@ public class TrackerController {
         File file = chooser.showSaveDialog(patternTable.getScene().getWindow());
         if (file == null) return;
 
-        try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
-            out.println("BPM=" + bpm);
-            out.println("TEMPO=" + (int) tempoSlider.getValue());
-            out.println("CHANNELS=2");
-            out.println("ROW;N1;O1;I1;V1;FX1;N2;O2;I2;V2;FX2");
-
-            for (PatternRow row : patternTable.getItems()) {
-                out.printf("%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s%n",
-                        row.getRow(),
-                        row.getNote(1), row.getOctave(1), row.getInstrument(1), row.getVolume(1), row.getEffect(1),
-                        row.getNote(2), row.getOctave(2), row.getInstrument(2), row.getVolume(2), row.getEffect(2)
-                );
-            }
-
-        } catch (IOException e) {
+        try {
+            persistenceService.savePattern(file, new ArrayList<>(patternTable.getItems()), bpm, (int) tempoSlider.getValue());
+        } catch (Exception e) {
             showError("Erreur d'écriture", "Impossible d'enregistrer la piste: " + e.getMessage());
         }
     }
 
     @FXML
     private void handleLoad() {
+        if (persistenceService == null) {
+            showError("Erreur de lecture", "Service de persistance non initialisé");
+            return;
+        }
+
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Charger une piste");
         chooser.getExtensionFilters().add(
@@ -831,47 +668,23 @@ public class TrackerController {
         File file = chooser.showOpenDialog(patternTable.getScene().getWindow());
         if (file == null) return;
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        try {
+            fr.esgi.service.PatternLoadResult result = persistenceService.loadPattern(file);
             patternTable.getItems().clear();
-            String line;
+            patternTable.getItems().addAll(result.pattern);
 
-            line = reader.readLine();
-            if (line != null && line.startsWith("BPM=")) {
-                bpm = Integer.parseInt(line.substring(4));
-                bpmLabel.setText("BPM: " + bpm);
-            }
+            bpm = result.bpm;
+            bpmLabel.setText("BPM: " + bpm);
 
-            line = reader.readLine();
-            if (line != null && line.startsWith("TEMPO=")) {
-                int tempo = Integer.parseInt(line.substring(6));
-                tempoSlider.setValue(tempo);
-                tempoLabel.setText("Tempo: " + tempo);
-            }
-
-            // Skip CHANNELS line
-            line = reader.readLine();
-
-            // Skip header line
-            line = reader.readLine();
-
-            while ((line = reader.readLine()) != null) {
-                String[] p = line.split(";");
-                if (p.length == 11) {
-                    PatternRow row = new PatternRow(p[0],
-                            p[1], p[2], p[3], p[4], p[5],
-                            p[6], p[7], p[8], p[9], p[10]);
-                    patternTable.getItems().add(row);
-                }
-            }
+            tempoSlider.setValue(result.tempo);
+            tempoLabel.setText("Tempo: " + result.tempo);
 
             selectedRow = null;
             setEditPanelEnabled(false);
             selectedRowLabel.setText("Ligne: --");
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             showError("Erreur de lecture", "Impossible de charger la piste: " + e.getMessage());
-        } catch (NumberFormatException e) {
-            showError("Erreur de format", "Le fichier contient des données invalides: " + e.getMessage());
         }
     }
 }

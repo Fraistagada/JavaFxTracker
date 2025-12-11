@@ -1,6 +1,9 @@
 package fr.esgi.controllers;
 
 import fr.esgi.constants.Constants;
+import fr.esgi.service.MidiPlaybackService;
+import fr.esgi.service.PatternService;
+import fr.esgi.service.PersistenceService;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -56,7 +59,23 @@ public class PianoController {
     private static final String[] WHITE_NOTES = {"C", "D", "E", "F", "G", "A", "B"};
     private static final boolean[] HAS_BLACK_KEY = {true, true, false, true, true, true, false};
 
+    private MidiPlaybackService midiService;
+    private PersistenceService persistenceService;
+    private PatternService patternService;
+
     public PianoController() throws MidiUnavailableException {
+    }
+
+    public void setMidiPlaybackService(MidiPlaybackService midiService) {
+        this.midiService = midiService;
+    }
+
+    public void setPersistenceService(PersistenceService persistenceService) {
+        this.persistenceService = persistenceService;
+    }
+
+    public void setPatternService(PatternService patternService) {
+        this.patternService = patternService;
     }
 
     @FXML
@@ -241,6 +260,14 @@ public class PianoController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fr/esgi/views/TrackerView.fxml"));
             Parent root = loader.load();
 
+            Object controller = loader.getController();
+            if (controller instanceof fr.esgi.controllers.TrackerController) {
+                fr.esgi.controllers.TrackerController tc = (fr.esgi.controllers.TrackerController) controller;
+                tc.setPatternService(patternService);
+                tc.setPersistenceService(persistenceService);
+                tc.setMidiPlaybackService(midiService);
+            }
+
             Stage stage = (Stage) pianoContainer.getScene().getWindow();
             Scene scene = new Scene(root, 1000, 600);
             scene.getStylesheets().add(getClass().getResource("/fr/esgi/styles/tracker-style.css").toExternalForm());
@@ -265,6 +292,14 @@ public class PianoController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fr/esgi/views/CreditsView.fxml"));
             Parent root = loader.load();
+
+            Object controller = loader.getController();
+            if (controller instanceof fr.esgi.controllers.CreditsController) {
+                fr.esgi.controllers.CreditsController cc = (fr.esgi.controllers.CreditsController) controller;
+                cc.setPatternService(patternService);
+                cc.setPersistenceService(persistenceService);
+                cc.setMidiPlaybackService(midiService);
+            }
 
             Stage stage = (Stage) pianoContainer.getScene().getWindow();
             Scene scene = new Scene(root, 1000, 600);
