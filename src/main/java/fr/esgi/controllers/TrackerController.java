@@ -4,6 +4,7 @@ import fr.esgi.constants.Constants;
 import fr.esgi.constants.Effects;
 import fr.esgi.constants.Instruments;
 import fr.esgi.models.PatternRow;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,7 +14,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.beans.property.SimpleStringProperty;
 
 import javax.sound.midi.MidiUnavailableException;
 import java.io.File;
@@ -202,7 +202,6 @@ public class TrackerController {
 
         // Style personnalisé pour le tableau
         patternTable.setStyle(
-                "-fx-font-family: 'Monospace';" +
                         "-fx-font-size: 12px;" +
                         "-fx-background-color: #000000;" +
                         "-fx-control-inner-background: #000000;"
@@ -230,12 +229,12 @@ public class TrackerController {
         channelToggleGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == channel1Btn) {
                 selectedChannel = 1;
-                channel1Btn.setStyle("-fx-background-color: #00aa00; -fx-text-fill: white; -fx-font-family: monospace;");
-                channel2Btn.setStyle("-fx-background-color: #555555; -fx-text-fill: white; -fx-font-family: monospace;");
+                channel1Btn.setStyle("-fx-background-color: #00aa00; -fx-text-fill: white;");
+                channel2Btn.setStyle("-fx-background-color: #555555; -fx-text-fill: white;");
             } else {
                 selectedChannel = 2;
-                channel1Btn.setStyle("-fx-background-color: #555555; -fx-text-fill: white; -fx-font-family: monospace;");
-                channel2Btn.setStyle("-fx-background-color: #0088aa; -fx-text-fill: white; -fx-font-family: monospace;");
+                channel1Btn.setStyle("-fx-background-color: #555555; -fx-text-fill: white;");
+                channel2Btn.setStyle("-fx-background-color: #0088aa; -fx-text-fill: white;");
             }
 
             // Recharger les valeurs pour le canal sélectionné
@@ -689,3 +688,4 @@ public class TrackerController {
         }
     }
 }
+

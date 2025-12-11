@@ -23,7 +23,7 @@ import javax.sound.midi.Synthesizer;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+
 import static fr.esgi.utils.FxUtils.showError;
 
 public class PianoController {
@@ -186,7 +186,6 @@ public class PianoController {
                 "-fx-border-color: #333333; " +
                 "-fx-border-width: 1; " +
                 "-fx-text-fill: #333333; " +
-                "-fx-font-family: monospace; " +
                 "-fx-font-size: 9; " +
                 "-fx-background-radius: 0 0 5 5; " +
                 "-fx-border-radius: 0 0 5 5;";
@@ -198,7 +197,6 @@ public class PianoController {
                 "-fx-border-color: #000000; " +
                 "-fx-border-width: 1; " +
                 "-fx-text-fill: white; " +
-                "-fx-font-family: monospace; " +
                 "-fx-font-size: 8; " +
                 "-fx-background-radius: 0 0 3 3; " +
                 "-fx-border-radius: 0 0 3 3;";
