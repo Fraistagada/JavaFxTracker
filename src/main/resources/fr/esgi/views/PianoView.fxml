@@ -20,7 +20,7 @@
             <Region HBox.hgrow="ALWAYS"/>
             <Button text="Tracker" onAction="#showTracker" style="-fx-background-color: #555555; -fx-text-fill: white;"/>
             <Button text="Piano" onAction="#showPiano" style="-fx-background-color: #00aa00; -fx-text-fill: white;"/>
-            <Button text="Crédits" onAction="#showCredits" style="-fx-background-color: #666666; -fx-text-fill: white;"/>
+            <Button text="Crédits" onAction="#showCredits" style="-fx-background-color: #555555; -fx-text-fill: white;"/>
         </HBox>
     </top>
 
