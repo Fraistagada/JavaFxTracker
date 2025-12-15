@@ -1,6 +1,5 @@
 package fr.esgi.service.impl;
 
-import fr.esgi.service.SchedulerServiceImpl;
 import org.junit.jupiter.api.*;
 
 import java.util.concurrent.CountDownLatch;

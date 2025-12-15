@@ -1,7 +1,6 @@
 package fr.esgi.service.impl;
 
 import fr.esgi.models.PatternRow;
-import fr.esgi.service.PatternServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

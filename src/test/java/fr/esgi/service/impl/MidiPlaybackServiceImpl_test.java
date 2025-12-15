@@ -1,6 +1,5 @@
 package fr.esgi.service.impl;
 
-import fr.esgi.service.MidiPlaybackServiceImpl;
 import fr.esgi.service.SchedulerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

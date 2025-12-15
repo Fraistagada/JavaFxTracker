@@ -1,4 +1,4 @@
-package fr.esgi.service;
+package fr.esgi.service.impl;
 
 import fr.esgi.models.PatternRow;
 import fr.esgi.service.MidiPlaybackService;

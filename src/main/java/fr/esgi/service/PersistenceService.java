@@ -1,6 +1,7 @@
 package fr.esgi.service;
 
 import fr.esgi.models.PatternRow;
+import fr.esgi.service.impl.PatternLoadResult;
 
 import java.io.File;
 import java.util.List;
