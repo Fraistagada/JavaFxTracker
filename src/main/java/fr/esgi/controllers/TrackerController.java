@@ -4,6 +4,7 @@ import fr.esgi.constants.Constants;
 import fr.esgi.constants.Effects;
 import fr.esgi.constants.Instruments;
 import fr.esgi.models.PatternRow;
+import fr.esgi.service.impl.PatternLoadResult;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -669,7 +670,7 @@ public class TrackerController {
         if (file == null) return;
 
         try {
-            fr.esgi.service.PatternLoadResult result = persistenceService.loadPattern(file);
+            PatternLoadResult result = persistenceService.loadPattern(file);
             patternTable.getItems().clear();
             patternTable.getItems().addAll(result.pattern);
 
