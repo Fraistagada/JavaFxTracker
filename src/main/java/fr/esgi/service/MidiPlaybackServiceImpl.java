@@ -1,4 +1,4 @@
-package fr.esgi.service.impl;
+package fr.esgi.service;
 
 import fr.esgi.constants.Constants;
 import fr.esgi.constants.Effects;

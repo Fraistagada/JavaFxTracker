@@ -1,4 +1,4 @@
-package fr.esgi.service.impl;
+package fr.esgi.service;
 
 import fr.esgi.service.SchedulerService;
 
